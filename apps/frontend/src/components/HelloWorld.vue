@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from "@iconify/vue";
 import { ref } from "vue";
 
 defineProps<{ msg: string }>();
@@ -7,28 +8,30 @@ const count = ref(0);
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
+  <div class="">
+    <h1>{{ msg }}</h1>
 
-  <div class="card">
-    <button type="button" @click="count++">count is {{ count }}</button>
+    <div class="card">
+      <button type="button" @click="count++">count is {{ count }}</button>
+      <p>
+        Editt
+        <code>components/HelloWorld.vue</code> to test HMR
+      </p>
+    </div>
+
     <p>
-      Editt
-      <code>components/HelloWorld.vue</code> to test HMR
+      Check out
+      <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank">create-vue</a>, the
+      official Vue + Vite starter
     </p>
+    <p>
+      Learn more about IDE Support for Vue in the
+      <a href="https://vuejs.org/guide/scaling-up/tooling.html#ide-support" target="_blank"
+        >Vue Docs Scaling up Guide</a
+      >.
+    </p>
+    <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
   </div>
-
-  <p>
-    Check out
-    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank">create-vue</a>, the
-    official Vue + Vite starter
-  </p>
-  <p>
-    Learn more about IDE Support for Vue in the
-    <a href="https://vuejs.org/guide/scaling-up/tooling.html#ide-support" target="_blank"
-      >Vue Docs Scaling up Guide</a
-    >.
-  </p>
-  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
 </template>
 
 <style scoped>
@@ -36,3 +39,17 @@ const count = ref(0);
   color: #888;
 }
 </style>
+<script lang="ts">
+export default {
+  name: "HelloWorld",
+  components: {
+    Icon,
+  },
+  emits: ["close"],
+  data() {
+    return {};
+  },
+  methods: {},
+  beforeUnmount() {},
+};
+</script>

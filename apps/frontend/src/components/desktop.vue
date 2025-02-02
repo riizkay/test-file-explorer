@@ -41,14 +41,16 @@ const handleClose = (id: string) => {
 </script>
 
 <template>
-  <div class="w-screen h-screen flex flex-row items-start flex-wrap">
+  <div class="w-screen h-screen flex flex-row items-start flex-wrap relative">
     <ShortcutIcon Name="File Explorer" @click="shortcutClick('File Explorer')" />
     <div v-for="window in windows" :key="window.id">
       <Window :Title="window.title" @close="handleClose(window.id)">
         <component :is="window.component" v-bind="window.props" />
       </Window>
     </div>
-
+    <p class="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+      Copyright created by Rizki A.R
+    </p>
     <!-- <HelloWorld msg="Vite + Vue" /> -->
   </div>
 </template>

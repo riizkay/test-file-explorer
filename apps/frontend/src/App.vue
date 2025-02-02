@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Desktop from "./components/desktop.vue";
+import Desktop from "./components/Desktop.vue";
 </script>
 
 <template>

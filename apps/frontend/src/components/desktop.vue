@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import Window from "./window.vue";
+import DesignArchitecture from "./modal/DesignArchitecture.vue";
+import Specifications from "./modal/Specifications.vue";
 import { generateUniqueId } from "@utils/index";
 import Explorer from "./Explorer.vue";
 import ShortcutIcon from "./ShortcutIcon.vue";
 import { ref, type Component } from "vue";
+import Core, { URLSource } from "../common/core_client";
 
 type Window = {
   id: string;
@@ -37,9 +40,27 @@ const handleClose = (id: string) => {
     windows.value.splice(index, 1);
   }
 };
-</script>
+var modal1 = ref(false);
+var modal2 = ref(false);
+const handleDesignClick = () => {
+  modal1.value = true;
+};
+const handleSpecificationsClick = () => {
+  modal2.value = true;
+};
 
+
+
+</script>
+ 
 <template>
+  <Teleport to="body">
+
+    <DesignArchitecture :show="modal1" @close="modal1 = false" />
+    <Specifications :show="modal2" @close="modal2 = false" />
+
+  </Teleport>
+  
   <div class="w-screen h-screen flex flex-row items-start flex-wrap relative">
     <ShortcutIcon Name="File Explorer" @click="shortcutClick('File Explorer')" />
     <div v-for="window in windows" :key="window.id">
@@ -48,7 +69,33 @@ const handleClose = (id: string) => {
       </Window>
     </div>
     <p class="absolute bottom-0 left-1/2 transform -translate-x-1/2">
-      Copyright created by Rizki A.R
+      <div class="flex flex-row items-center gap-2">
+        <div>
+          Copyright created by Rizki A.R
+        </div>
+        <span>|</span>
+        <div>
+          <a href="#" 
+           @click.prevent="handleDesignClick"
+          >
+                 
+            Design Architecture
+          </a>
+        </div>
+        <span>|</span>
+        <div>
+          <a href="#" 
+           @click.prevent="handleSpecificationsClick"
+          >
+                 
+            Specifications
+          </a>
+        </div>
+       
+        
+      </div>
+ 
+
     </p>
     <!-- <HelloWorld msg="Vite + Vue" /> -->
   </div>

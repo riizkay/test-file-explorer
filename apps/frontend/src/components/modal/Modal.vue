@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { defineProps } from "vue";
 
-defineProps<{ show: boolean }>();
+defineProps<{ show: boolean; width?: string }>();
 </script>
 
 <template>
-  <div v-if="show" class="modal-backdrop z-[999]">
-    <div class="modal z-[1000]">
+  <div v-if="show" class="modal-backdrop z-[999] w-screen h-screen">
+    <div class="modal z-[1000]" :style="{ width: width || 'auto' }">
       <slot></slot>
     </div>
   </div>
@@ -14,7 +14,7 @@ defineProps<{ show: boolean }>();
 
 <style scoped>
 .modal-backdrop {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;

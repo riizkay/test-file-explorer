@@ -12,7 +12,7 @@ import {
   FSType,
 } from "@shared/types";
 import urlJoin from "url-join";
-import ModalInputFolderName from "@/components/Modal.vue";
+import ModalInputFolderName from "./modal/Modal.vue";
 import { useToast } from "vue-toastification";
 const toast = useToast();
 type FileSystemItemPatched = FileSystemItem & {

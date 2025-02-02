@@ -38,7 +38,7 @@ async function init_database() {
   }
 }
 const migration = async () => {
-  const files = glob.sync(join(__dirname, "./src/rest/model/**/*.ts"));
+  const files = await glob.glob("src/**/*.api.ts", { cwd: __dirname });
   await Promise.all(
     files.map(async (file) => {
       if (file.includes("base.ts")) return;

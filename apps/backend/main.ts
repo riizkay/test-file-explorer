@@ -56,10 +56,8 @@ async function init_routes() {
   );
 
   const files = await glob.glob("src/**/*.api.ts", { cwd: __dirname });
-  console.log(files);
   await Promise.all(
     files.map(async (file) => {
-      console.log(resolve("./" + file));
       const api = await import("./" + file);
       if (api.methods.includes("GET")) app.get(api.endpoint, api.default);
       if (api.methods.includes("POST")) app.post(api.endpoint, api.default);

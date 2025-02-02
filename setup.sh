@@ -1,3 +1,45 @@
+cat > /etc/systemd/system/infokes1.service << EOL
+[Unit]
+Description=File Explorer Node Application
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/root/.bun/bin/bun run /home/infokes-test/apps/backend/main.ts --port 4001
+EnvironmentFile=/home/infokes-test/apps/backend/.env
+WorkingDirectory=/home/infokes-test
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+cat > /etc/systemd/system/infokes2.service << EOL
+[Unit]
+Description=File Explorer Node Application
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/root/.bun/bin/bun run /home/infokes-test/apps/backend/main.ts --port 4002
+EnvironmentFile=/home/infokes-test/apps/backend/.env
+WorkingDirectory=/home/infokes-test
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOL
+systemctl daemon-reload
+systemctl enable infokes1.service
+systemctl enable infokes2.service
+systemctl restart infokes1.service
+systemctl restart infokes2.service
+systemctl status infokes1.service
+systemctl status infokes2.service
+
+
 cat > /etc/apache2/sites-enabled/infokes.riizkay.my.id.conf << EOL
 <VirtualHost *:80>
     ServerName infokes.api.riizkay.my.id

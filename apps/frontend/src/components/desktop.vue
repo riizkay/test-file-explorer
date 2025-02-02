@@ -6,7 +6,7 @@ import { generateUniqueId } from "@utils/index";
 import Explorer from "./Explorer.vue";
 import ShortcutIcon from "./ShortcutIcon.vue";
 import { ref, type Component } from "vue";
-import Core, { URLSource } from "../common/core_client";
+
 
 type Window = {
   id: string;

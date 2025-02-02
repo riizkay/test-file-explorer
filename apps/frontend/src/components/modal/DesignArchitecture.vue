@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { defineComponent } from "vue";
 import Modal from "./Modal.vue";
 defineProps<{ show: boolean; onClose: () => void }>();
 </script>

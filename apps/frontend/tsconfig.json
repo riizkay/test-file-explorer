@@ -4,7 +4,8 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
-      "@utils/*": ["../../packages/utils/*"]
+      "@utils/*": ["../../packages/utils/*"],
+      "@shared/*": ["../../packages/shared/*"]
     }
   }
 }

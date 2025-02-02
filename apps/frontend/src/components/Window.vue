@@ -109,44 +109,6 @@ export default {
       height: 400,
       minWidth: 400,
       minHeight: 300,
-      sidebarItems: [
-        { name: "Desktop", icon: "material-symbols:desktop-windows" },
-        { name: "Documents", icon: "material-symbols:folder" },
-        { name: "Downloads", icon: "material-symbols:download" },
-        { name: "Pictures", icon: "material-symbols:image" },
-        { name: "Music", icon: "material-symbols:music-note" },
-        { name: "Videos", icon: "material-symbols:video-library" },
-      ],
-      files: [
-        {
-          name: "Document.txt",
-          dateModified: "2023-12-25 10:30",
-          type: "Text Document",
-          size: "1 KB",
-          icon: "material-symbols:description",
-        },
-        {
-          name: "Images",
-          dateModified: "2023-12-24 15:45",
-          type: "File folder",
-          size: "",
-          icon: "material-symbols:folder",
-        },
-        {
-          name: "Project.pdf",
-          dateModified: "2023-12-23 09:15",
-          type: "PDF Document",
-          size: "2.5 MB",
-          icon: "material-symbols:picture-as-pdf",
-        },
-        {
-          name: "Presentation.pptx",
-          dateModified: "2023-12-22 14:20",
-          type: "PowerPoint Presentation",
-          size: "5.8 MB",
-          icon: "material-symbols:presentation",
-        },
-      ],
     };
   },
   methods: {

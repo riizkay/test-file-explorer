@@ -1,32 +1,395 @@
 <script setup lang="ts">
+import Tree from "primevue/tree";
 import { Icon } from "@iconify/vue";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import Core, { URLSource } from "../common/core_client";
+import { VTreeview } from "vuetify/labs/VTreeview";
+import { defineComponent } from "vue";
+import {
+  type RestApiResponse,
+  type FileSystemListResponse,
+  type FileSystemItem,
+  FSType,
+} from "@shared/types";
+import urlJoin from "url-join";
+import ModalInputFolderName from "@/components/Modal.vue";
+import { useToast } from "vue-toastification";
+const toast = useToast();
+type FileSystemItemPatched = FileSystemItem & {
+  isOpen: boolean;
+  selected: boolean;
+  loading: boolean;
+  children: FileSystemItemPatched[];
+};
+type FileSystemPatched = FileSystemListResponse & {
+  path: string;
+  items: FileSystemItemPatched[];
+};
+var navigateIndex = ref<number>(0);
+const props = defineProps<{ path: string }>();
+const currentPath = ref(props.path);
+const openedFolders = ref<string[]>([]);
+const selectedFolders = ref<string[]>([]);
+const treeFS = ref<FileSystemPatched>();
+const currentLS = ref<FileSystemListResponse>();
+const searchQuery = ref<string>("");
+const fileInputRef = ref(null);
+// Define tree data
+const showContextMenu = ref(false);
+const contextMenuPosition = ref({ x: 0, y: 0 });
 
-defineProps<{ path: string }>();
+const selectedItem = ref<FileSystemItem>();
+const navStack = ref<string[]>([]);
 
-const count = ref(0);
+const inputName = ref("");
+const showModalInputName = ref<string | boolean>(false);
+
+const handleContextMenu = (event: MouseEvent, file: FileSystemItem) => {
+  event.preventDefault();
+  showContextMenu.value = true;
+  console.log(file, "file");
+  selectFile(file);
+
+  // Panggil adjustMenuPosition untuk mendapatkan posisi yang sudah disesuaikan
+  const { x, y } = adjustMenuPosition(event.clientX, event.clientY);
+
+  contextMenuPosition.value = { x, y };
+  selectedItem.value = file;
+};
+const adjustMenuPosition = (x: number, y: number) => {
+  const menu = document.querySelector(".context-menu");
+  if (!menu) return { x, y };
+
+  const menuRect = menu.getBoundingClientRect();
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+
+  return {
+    x: Math.min(x, windowWidth - menuRect.width),
+    y: Math.min(y, windowHeight - menuRect.height),
+  };
+};
+
+const closeContextMenu = () => {
+  showContextMenu.value = false;
+};
+
+const Load_FS_Main = async (path: string, page: number = 1, limit: number = 100) => {
+  return new Promise<FileSystemPatched>((resolve, reject) => {
+    Core.API.post<FileSystemListResponse>("/api/filesystem/list", {
+      path: path,
+      page: 1,
+      recursive: searchQuery.value.length > 0 ? true : false,
+      search: searchQuery.value,
+      limit: 100000,
+      type: [FSType.FILE, FSType.FOLDER],
+    }).then((res: RestApiResponse<FileSystemListResponse>) => {
+      if (res.success) {
+        currentLS.value = res.data;
+        currentPath.value = path;
+        //console.log(currentLS.value, "wwwwwwww");
+      }
+    });
+  });
+};
+const refresh = () => {
+  Load_FS_Main(currentPath.value);
+};
+const LoadFS_Sidebar = (path: string) => {
+  return new Promise<FileSystemPatched>((resolve, reject) => {
+    Core.API.post<FileSystemListResponse>("/api/filesystem/list", {
+      path: path,
+      page: 1,
+      type: [2],
+      limit: 100000,
+    }).then((res: RestApiResponse<FileSystemListResponse>) => {
+      if (res.success) {
+        for (const item of res.data.items) {
+          // (item as any).title = item.name;
+
+          (item as any).path = path;
+          (item as any).loading = false;
+          (item as any).isOpen = false;
+          if (item.childrenCount == 0) delete (item as any).children;
+          else {
+            (item as any).children = [];
+          }
+        }
+        var patched = { ...res.data, path: path, items: res.data.items as FileSystemItemPatched[] };
+
+        resolve(patched);
+      } else {
+        reject(res.message);
+      }
+    });
+  });
+};
+const loadRootFS = () => {
+  LoadFS_Sidebar("/").then((r: FileSystemPatched) => {
+    treeFS.value = r;
+  });
+};
+const pushNav = (path: string) => {
+  navStack.value.push(path);
+  navigateIndex.value = navStack.value.length - 1;
+  Load_FS_Main(path);
+};
+const selectFile = (file: FileSystemItem) => {
+  selectedItem.value = file;
+};
+const navigateTo = (path?: string) => {
+  var inputPath = path || currentPath.value;
+  if (inputPath == "/") selectedFolders.value = [];
+
+  if (navigateIndex.value < navStack.value.length - 1) {
+    navStack.value.splice(navigateIndex.value + 1, navStack.value.length - navigateIndex.value - 1);
+  }
+  navStack.value.push(inputPath);
+  navigateIndex.value = navStack.value.length - 1;
+  Load_FS_Main(inputPath);
+};
+const openFile = (file: FileSystemItem) => {
+  window.open(urlJoin(Core.Common.getURLSource(URLSource.file_delivery)!, file.cdn_url!), "_blank");
+};
+
+onMounted(async () => {
+  await loadRootFS();
+  navigateTo("/");
+
+  document.addEventListener("click", (e: any) => {
+    if (!e.target.closest(".context-menu")) {
+      closeContextMenu();
+    }
+  });
+});
+const onNodeClick = (item: FileSystemItemPatched) => {
+  const isOpen = !item.isOpen;
+  item.isOpen = isOpen;
+
+  const assignOpen = () => {
+    const newOpenNodes = isOpen
+      ? [...openedFolders.value, item.id]
+      : openedFolders.value.filter((id) => id !== item.id);
+
+    openedFolders.value = newOpenNodes;
+  };
+  if (item.isOpen == true) {
+    if (item.children.length != item.childrenCount) {
+      item.loading = true;
+
+      LoadFS_Sidebar(urlJoin(item.path, item.name)).then((r: FileSystemPatched) => {
+        item.children = r.items;
+        console.log(item.children);
+        item.loading = false;
+        assignOpen();
+      });
+    } else {
+      assignOpen();
+    }
+  } else {
+    assignOpen();
+  }
+};
+const selectFolder = (item: FileSystemItemPatched) => {
+  selectedFolders.value = [item.id]; // Hanya memungkinkan satu pilihan
+  var path = urlJoin(item.path, item.name);
+
+  currentPath.value = path;
+  navigateTo(path);
+};
+const modalActionInputName = (name: string) => {
+  if (name.length == 0) {
+    toast.error("Name cannot be empty");
+    return;
+  }
+
+  if (showModalInputName.value == "create_folder") {
+    Core.API.post("/api/filesystem/createFolder", {
+      path: currentPath.value,
+      name: name,
+    }).then((res: RestApiResponse<any>) => {
+      if (res.success) {
+        toast.success("Folder created");
+
+        showModalInputName.value = false;
+        loadRootFS();
+        Load_FS_Main(currentPath.value);
+      } else {
+        toast.error(res.message || "Failed to create folder");
+      }
+    });
+  } else if (showModalInputName.value == "rename") {
+    Core.API.post("/api/filesystem/rename", {
+      id: selectedItem.value?.id,
+      name: name,
+    }).then((res: RestApiResponse<any>) => {
+      if (res.success) {
+        toast.success("Item has been renamed");
+        showModalInputName.value = false;
+        loadRootFS();
+        Load_FS_Main(currentPath.value);
+      } else {
+        toast.error(res.message || "Failed to create folder");
+      }
+    });
+  }
+};
+
+const goBack = () => {
+  if (navigateIndex.value > 0) {
+    navigateIndex.value--;
+    Load_FS_Main(navStack.value[navigateIndex.value]);
+  }
+};
+const goForward = () => {
+  if (navigateIndex.value < navStack.value.length - 1) {
+    navigateIndex.value++;
+    Load_FS_Main(navStack.value[navigateIndex.value]);
+  }
+};
+
+const deleteFile = (file: FileSystemItem) => {
+  Core.API.post("/api/filesystem/delete", {
+    id: file.id,
+  }).then((res: RestApiResponse<any>) => {
+    if (res.success) {
+      toast.success("File deleted");
+      loadRootFS();
+      Load_FS_Main(currentPath.value);
+    } else {
+      toast.error(res.message || "Failed to delete file");
+    }
+  });
+};
+const uploadFile = () => {
+  (fileInputRef.value as any).click();
+};
+const handleFileSelect = (event: any) => {
+  const files = event.target.files;
+  if (files.length > 0) {
+    Core.CDN.upload_file(
+      "/api/filesystem/uploadfile",
+      files,
+      { path: currentPath.value },
+      (progress: number) => {
+        console.log(progress);
+      }
+    ).then((res: any) => {
+      refresh();
+    });
+    // Handle upload logic here
+  }
+};
 </script>
 
 <template>
-  <div>
+  <Teleport to="body">
+    <ModalInputFolderName :show="showModalInputName !== false">
+      <div class="w-[300px]">
+        <h2 class="text-black">Please enter folder name</h2>
+
+        <input
+          type="text"
+          v-model="inputName"
+          @keyup.enter="modalActionInputName(inputName)"
+          class="mb-3 mt-3 w-full px-4 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+
+        <div class="flex justify-end gap-2">
+          <v-btn
+            class="bg-red-500 text-white px-4 py-1.5 rounded-lg"
+            @click="
+              () => {
+                showContextMenu = false;
+                showModalInputName = false;
+                inputName = '';
+              }
+            "
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            class="bg-blue-500 text-white px-4 py-1.5 rounded-lg"
+            @click="modalActionInputName(inputName)"
+          >
+            Submit
+          </v-btn>
+        </div>
+      </div>
+    </ModalInputFolderName>
+  </Teleport>
+
+  <!-- Hidden file input -->
+  <input type="file" ref="fileInputRef" @change="handleFileSelect" style="display: none" multiple />
+
+  <div class="flex flex-col h-full relative">
+    <!-- Context Menu -->
+    <Teleport to="body">
+      <div
+        v-if="showContextMenu"
+        class="absolute bg-white shadow-lg rounded-lg py-2 z-50"
+        :style="{
+          left: `${contextMenuPosition.x}px`,
+          top: `${contextMenuPosition.y}px`,
+        }"
+      >
+        <div
+          class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+          @click="
+            () => {
+              showContextMenu = false;
+              showModalInputName = 'create_folder';
+            }
+          "
+        >
+          New Folder
+        </div>
+        <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" @click="uploadFile()">
+          Upload File
+        </div>
+        <div
+          v-if="selectedItem != null"
+          class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+          @click="
+            () => {
+              showModalInputName = 'rename';
+              inputName = selectedItem.name;
+            }
+          "
+        >
+          Rename '{{ selectedItem.name }}'
+        </div>
+        <div
+          v-if="selectedItem != null"
+          class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600"
+          @click="deleteFile(selectedItem)"
+        >
+          Delete '{{ selectedItem.name }}'
+        </div>
+      </div>
+    </Teleport>
     <!-- Navbar -->
-    <div class="flex gap-2 p-4 bg-gray-50 border-b">
-      <div class="flex gap-1.5">
+    <div class="flex gap-2 p-2 bg-gray-50 border-b">
+      <div class="flex gap-1">
         <button
-          class="px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors"
+          class="px-3 py-1 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors"
           @click="goBack"
+          :disabled="navigateIndex === 0"
+          :class="{ 'opacity-50 cursor-not-allowed': navigateIndex === 0 }"
         >
           <Icon icon="material-symbols:arrow-back" class="text-gray-600" />
         </button>
         <button
-          class="px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors"
+          class="px-3 py-1 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors"
           @click="goForward"
+          :disabled="navigateIndex >= navStack?.length - 1"
+          :class="{ 'opacity-50 cursor-not-allowed': navigateIndex >= navStack?.length - 1 }"
         >
           <Icon icon="material-symbols:arrow-forward" class="text-gray-600" />
         </button>
         <button
-          class="px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors"
-          @click="goUp"
+          class="px-3 py-1 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors"
+          @click="uploadFile"
         >
           <Icon icon="material-symbols:arrow-upward" class="text-gray-600" />
         </button>
@@ -35,32 +398,80 @@ const count = ref(0);
         <input
           type="text"
           v-model="currentPath"
-          @keyup.enter="navigateTo"
+          @keyup.enter="navigateTo(currentPath)"
           class="w-full px-4 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
+      </div>
+      <div class="flex-none w-64">
+        <div class="relative">
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="Search files & folders..."
+            class="w-full pl-10 pr-4 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            @input="refresh"
+          />
+          <Icon
+            icon="material-symbols:search"
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          />
+        </div>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="flex flex-grow">
+    <div class="flex flex-grow h-full">
       <!-- Sidebar -->
-      <div class="w-56 bg-gray-50 p-4">
-        <div class="space-y-1">
-          <div
-            v-for="(item, index) in sidebarItems"
-            :key="index"
-            class="p-3 hover:bg-gray-100 cursor-pointer rounded-lg transition-colors flex items-center"
-            @click="selectFolder(item)"
+      <div class="w-56 bg-gray-50 p-2">
+        <div class="space-y-1 h-full">
+          <!-- <Tree :value="treeFS?.items" selectionMode="single"> </Tree> -->
+
+          <v-treeview
+            class="h-full overflow-y-auto"
+            v-model:opened="openedFolders"
+            v-model:activated="selectedFolders"
+            active-class="active-node"
+            single-select
+            item-value="id"
+            :items="treeFS?.items"
+            item-props="isOpen"
+            dense="compact"
           >
-            <Icon :icon="item.icon" class="mr-3 text-gray-500" />
-            <span class="text-gray-700">{{ item.name }}</span>
-          </div>
+            <template v-slot:prepend="{ item, isOpen }">
+              <div class="flex flex-row justify-start items-center" @click="selectFolder(item)">
+                <div class="w-8 hover:bg-gray-100 rounded transition-colors">
+                  <v-icon
+                    v-if="item.childrenCount > 0"
+                    class="text-gray-500"
+                    :class="{ 'loading-spin': item.loading }"
+                    @click="onNodeClick(item)"
+                  >
+                    {{
+                      item.loading
+                        ? "mdi-loading"
+                        : item.isOpen
+                        ? "mdi-chevron-down"
+                        : "mdi-chevron-right"
+                    }}
+                  </v-icon>
+                </div>
+                <v-icon class="text-gray-500">
+                  {{ isOpen ? "mdi-folder-open" : "mdi-folder" }}
+                </v-icon>
+                <span class="ml-2">{{ item.name }} </span>
+              </div>
+            </template>
+          </v-treeview>
         </div>
       </div>
 
       <!-- File List -->
-      <div class="flex-grow flex flex-col bg-white">
-        <div class="flex bg-gray-50 px-6 py-3">
+      <div
+        class="flex-grow flex flex-col h-full"
+        @click="closeContextMenu"
+        @contextmenu="handleContextMenu($event, selectedItem)"
+      >
+        <div class="flex bg-gray-50 px-6 py-2">
           <div class="w-2/5 font-medium text-gray-600">Name</div>
           <div class="w-1/5 font-medium text-gray-600">Date modified</div>
           <div class="w-1/5 font-medium text-gray-600">Type</div>
@@ -68,19 +479,46 @@ const count = ref(0);
         </div>
         <div class="flex-grow overflow-y-auto">
           <div
-            v-for="(file, index) in files"
-            :key="index"
-            class="flex px-6 py-3 cursor-pointer hover:bg-blue-50 transition-colors rounded-lg mx-2 my-1"
-            :class="{ 'bg-blue-50': selectedFile === file }"
-            @click="selectFile(file)"
+            v-if="!currentLS?.items || currentLS.items.length === 0"
+            class="flex justify-center items-center h-full"
+          >
+            <span class="text-gray-500">This Folder is empty</span>
+          </div>
+          <div
+            v-else
+            v-for="(file, index) in currentLS.items"
+            :key="file.id"
+            class="flex px-6 py-1 cursor-pointer hover:bg-blue-50 transition-colors rounded-lg mx-2 my-1"
+            :class="{
+              'bg-blue-50': selectedItem?.id === file.id,
+              active: file.id === selectedItem?.id,
+            }"
+            @leftclick="selectedItem = file"
+            @click="selectedItem = file"
+            @dblclick="
+              () => {
+                if (file.type == FSType.FOLDER) {
+                  navigateTo(urlJoin(currentPath, file.name));
+                } else if (file.type == FSType.FILE) {
+                  openFile(file);
+                }
+              }
+            "
           >
             <div class="w-2/5 flex items-center">
-              <Icon :icon="file.icon" class="mr-3 text-gray-500" />
+              <Icon
+                :icon="file.type === 2 ? 'mdi-folder' : 'mdi-file'"
+                class="mr-3 text-gray-500"
+              />
               <span class="text-gray-700">{{ file.name }}</span>
             </div>
-            <div class="w-1/5 text-gray-600">{{ file.dateModified }}</div>
-            <div class="w-1/5 text-gray-600">{{ file.type }}</div>
-            <div class="w-1/5 text-gray-600">{{ file.size }}</div>
+            <div class="w-1/5 text-gray-600">
+              {{ new Date(file.updated_at).toLocaleDateString() }}
+            </div>
+            <div class="w-1/5 text-gray-600">{{ file.type === 2 ? "Folder" : "File" }}</div>
+            <div class="w-1/5 text-gray-600">
+              {{ file.file_size ? (file.file_size / 1024 / 1024).toFixed(2) + " MB" : "-" }}
+            </div>
           </div>
         </div>
       </div>
@@ -88,17 +526,41 @@ const count = ref(0);
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.active-node) {
+  background-color: #f6f2ff !important; /* Warna oranye */
+  color: black !important;
+  border-radius: 5px;
+  padding: 5px;
+}
+:deep(.context-menu) {
+  min-width: 200px;
+}
+:deep(.v-list-item-action) {
+  display: none !important;
+}
+:deep(.v-icon.loading-spin) {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
 <script lang="ts">
-export default {
+export default defineComponent({
   name: "Window",
   components: {
     Icon,
+    Tree,
   },
   emits: ["close"],
   data() {
     return {
-      currentPath: "C:\\",
       selectedFile: null,
       isDragging: false,
       isResizing: false,
@@ -115,66 +577,9 @@ export default {
       height: 400,
       minWidth: 400,
       minHeight: 300,
-      sidebarItems: [
-        { name: "Desktop", icon: "material-symbols:desktop-windows" },
-        { name: "Documents", icon: "material-symbols:folder" },
-        { name: "Downloads", icon: "material-symbols:download" },
-        { name: "Pictures", icon: "material-symbols:image" },
-        { name: "Music", icon: "material-symbols:music-note" },
-        { name: "Videos", icon: "material-symbols:video-library" },
-      ],
-      files: [
-        {
-          name: "Document.txt",
-          dateModified: "2023-12-25 10:30",
-          type: "Text Document",
-          size: "1 KB",
-          icon: "material-symbols:description",
-        },
-        {
-          name: "Images",
-          dateModified: "2023-12-24 15:45",
-          type: "File folder",
-          size: "",
-          icon: "material-symbols:folder",
-        },
-        {
-          name: "Project.pdf",
-          dateModified: "2023-12-23 09:15",
-          type: "PDF Document",
-          size: "2.5 MB",
-          icon: "material-symbols:picture-as-pdf",
-        },
-        {
-          name: "Presentation.pptx",
-          dateModified: "2023-12-22 14:20",
-          type: "PowerPoint Presentation",
-          size: "5.8 MB",
-          icon: "material-symbols:presentation",
-        },
-      ],
     };
   },
-  methods: {
-    goBack() {
-      // Implementasi navigasi ke belakang
-    },
-    goForward() {
-      // Implementasi navigasi ke depan
-    },
-    goUp() {
-      // Implementasi navigasi ke atas
-    },
-    navigateTo() {
-      // Implementasi navigasi ke path tertentu
-    },
-    selectFolder(folder: any) {
-      // Implementasi pemilihan folder
-    },
-    selectFile(file: any) {
-      this.selectedFile = file;
-    },
-  },
+  methods: {},
   beforeUnmount() {},
-};
+});
 </script>

@@ -3,6 +3,7 @@
   "module": "server.ts",
   "type": "module",
   "scripts": {
+    "install": "cd apps/backend && bun install && cd ../frontend && bun install",
     "migration": "cd apps/backend && bun run migration.ts",
     "dev:frontend": "cd apps/frontend && bun run dev",
     "dev:backend": "cd apps/backend && bun run --watch main.ts"

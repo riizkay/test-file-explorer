@@ -3,10 +3,14 @@
   "module": "server.ts",
   "type": "module",
   "scripts": {
-    "install": "cd apps/backend && bun install && cd ../frontend && bun install",
+    "upload-static": "bun run upload_static.ts",
+    "build": "cd apps/frontend && bun run build && cd ../.. && bun run upload-static",
+    "install": "bun install && cd apps/backend && bun install && cd ../frontend && bun install",
     "migration": "cd apps/backend && bun run migration.ts",
     "dev:frontend": "cd apps/frontend && bun run dev",
-    "dev:backend": "cd apps/backend && bun run --watch main.ts"
+    "dev:backend": "cd apps/backend && bun run --watch main.ts",
+    "prod:frontend": "cd apps/frontend && bun run dev",
+    "prod:backend": "cd apps/backend && bun run main.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -15,6 +19,10 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.740.0",
+    "@types/fs-extra": "^11.0.4",
+    "dotenv": "^16.4.7",
+    "fs-extra": "^11.3.0",
     "mysql2": "^3.12.0",
     "sequelize": "^6.37.5"
   }

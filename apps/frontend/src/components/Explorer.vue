@@ -76,8 +76,8 @@ const closeContextMenu = () => {
   showContextMenu.value = false;
 };
 
-const Load_FS_Main = async (path: string, page: number = 1, limit: number = 100) => {
-  return new Promise<FileSystemPatched>((resolve, reject) => {
+const Load_FS_Main = async (path: string) => {
+  return new Promise<FileSystemListResponse>((resolve, reject) => {
     Core.API.post<FileSystemListResponse>("/api/filesystem/list", {
       path: path,
       page: currentLS_Page.value,
@@ -85,13 +85,18 @@ const Load_FS_Main = async (path: string, page: number = 1, limit: number = 100)
       search: searchQuery.value,
       limit: currentLS_ItemPerPage.value,
       type: [FSType.FILE, FSType.FOLDER],
-    }).then((res: RestApiResponse<FileSystemListResponse>) => {
-      if (res.success) {
-        currentLS.value = res.data;
-        currentPath.value = path;
-        //console.log(currentLS.value, "wwwwwwww");
-      }
-    });
+    })
+      .then((res: RestApiResponse<FileSystemListResponse>) => {
+        if (res.success) {
+          currentLS.value = res.data;
+          currentPath.value = path;
+          resolve(res.data);
+          //console.log(currentLS.value, "wwwwwwww");
+        }
+      })
+      .catch((err) => {
+        reject(err);
+      });
   });
 };
 const refresh = () => {
@@ -131,11 +136,7 @@ const loadRootFS = () => {
     treeFS.value = r;
   });
 };
-const pushNav = (path: string) => {
-  navStack.value.push(path);
-  navigateIndex.value = navStack.value.length - 1;
-  Load_FS_Main(path);
-};
+
 const selectFile = (file: FileSystemItem) => {
   selectedItem.value = file;
 };
@@ -277,7 +278,9 @@ const handleFileSelect = (event: any) => {
         console.log(progress);
       }
     ).then((res: any) => {
-      refresh();
+      if (res.success) {
+        refresh();
+      }
     });
     // Handle upload logic here
   }
@@ -359,7 +362,7 @@ const changePage = (page: number) => {
           @click="
             () => {
               showModalInputName = 'rename';
-              inputName = selectedItem.name;
+              inputName = selectedItem?.name || '';
             }
           "
         >
@@ -475,7 +478,7 @@ const changePage = (page: number) => {
       <div
         class="flex-grow flex flex-col h-full"
         @click="closeContextMenu"
-        @contextmenu="handleContextMenu($event, selectedItem)"
+        @contextmenu="handleContextMenu($event, selectedItem as any)"
       >
         <div class="flex bg-gray-50 px-6 py-2">
           <div class="w-2/5 font-medium text-gray-600">Name</div>
@@ -492,7 +495,7 @@ const changePage = (page: number) => {
           </div>
           <div
             v-else
-            v-for="(file, index) in currentLS.items"
+            v-for="file in currentLS.items"
             :key="file.id"
             class="flex px-6 py-1 cursor-pointer hover:bg-blue-50 transition-colors rounded-lg mx-2 my-1"
             :class="{
@@ -558,12 +561,12 @@ const changePage = (page: number) => {
             </button>
 
             <div class="flex items-center space-x-1">
-              <template v-for="page in totalPages" :key="page">
+              <template v-for="page in currentLS?.totalPages" :key="page">
                 <button
                   @click="changePage(page)"
                   :class="[
                     'w-10 h-10 text-sm font-medium rounded-md shadow-sm transition-all duration-200',
-                    currentPage === page
+                    currentLS_Page === page
                       ? 'bg-blue-600 text-white border border-blue-600 hover:bg-blue-700'
                       : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50',
                     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
@@ -575,7 +578,7 @@ const changePage = (page: number) => {
             </div>
 
             <button
-              @click="currentLS_Page < currentLS?.totalPages && changePage(currentLS_Page + 1)"
+              @click="currentLS_Page < currentLS?.totalPages! && changePage(currentLS_Page + 1)"
               :disabled="currentLS_Page === currentLS?.totalPages"
               class="flex items-center px-2 py-2 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >

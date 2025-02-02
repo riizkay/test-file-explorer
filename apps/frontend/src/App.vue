@@ -4,7 +4,6 @@ import Desktop from "./components/desktop.vue";
 
 <template>
   <Desktop />
-  <p>Copyright</p>
 </template>
 
 <style scoped>

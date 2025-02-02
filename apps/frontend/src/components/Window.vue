@@ -96,6 +96,8 @@ export default {
     const maxX = window.innerWidth - 600; // Lebar jendela
     const maxY = window.innerHeight - 400; // Tinggi jendela
     return {
+      isDragging: false,
+      isResizing: false,
       resizeDirection: "",
       position: {
         x: Math.random() * maxX,
@@ -200,25 +202,6 @@ export default {
       document.removeEventListener("mousemove", this.onDrag);
       document.removeEventListener("mouseup", this.stopDragging);
       document.body.style.userSelect = "";
-    },
-
-    goBack() {
-      // Implementasi navigasi ke belakang
-    },
-    goForward() {
-      // Implementasi navigasi ke depan
-    },
-    goUp() {
-      // Implementasi navigasi ke atas
-    },
-    navigateTo() {
-      // Implementasi navigasi ke path tertentu
-    },
-    selectFolder(folder: any) {
-      // Implementasi pemilihan folder
-    },
-    selectFile(file: any) {
-      this.selectedFile = file;
     },
   },
   beforeUnmount() {

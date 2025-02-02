@@ -28,17 +28,7 @@ export enum ResponseType {
   raw_response = 4,
 }
 // var mqttInstance: MQTTInstance | any = null;
-var clientId: any = null;
-var fingerID: any = null;
 
-function contains(target: any, pattern: any) {
-  var value = false;
-  pattern.forEach(function (word: any) {
-    value = value || target.includes(word);
-  });
-  // console.log(value, "rrrrrrTTTTTTTTTT");
-  return value;
-}
 function createBody(data: any, paramsData: any) {
   var body = null;
   if (paramsData == 1) {
@@ -136,7 +126,7 @@ export const API = {
         .then((data) => {
           resolve(data as any);
         })
-        .catch((ex) => {
+        .catch(() => {
           if (responseType == ResponseType.json) {
             //  resolve("Something went wrong");
           }
@@ -260,7 +250,8 @@ export const CDN = {
             //   const progress = (progressEvent.loaded / progressEvent.total) * 50;
             //   setProgress(progress);
           },
-          onDownloadProgress: (progressEvent) => {
+          onDownloadProgress: (progressEvent: any) => {
+            progressEvent;
             //   const progress = 50 + (progressEvent.loaded / progressEvent.total) * 50;
             //   console.log(progress);
             //   setProgress(progress);
@@ -269,6 +260,9 @@ export const CDN = {
         .then((resp) => {
           // console.log(resp.data,'aaaaaaaaaaaqqqqqqq');
           resolve(resp.data);
+        })
+        .catch((err) => {
+          reject(err);
         });
     });
   },

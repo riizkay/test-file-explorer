@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
-import { ref } from "vue";
 
 defineProps<{ Name: string }>();
-
-const count = ref(0);
 </script>
 
 <template>

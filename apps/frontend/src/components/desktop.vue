@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
 import Window from "./window.vue";
-import { generateUniqueId } from "@utils";
+import { generateUniqueId } from "@utils/index";
 import Explorer from "./Explorer.vue";
 import ShortcutIcon from "./ShortcutIcon.vue";
 import { ref, type Component } from "vue";

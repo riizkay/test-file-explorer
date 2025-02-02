@@ -5,7 +5,7 @@
   "scripts": {
     "upload-static": "bun run upload_static.ts",
     "build": "cd apps/frontend && bun run build && cd ../.. && bun run upload-static",
-    "install": "bun install && cd apps/backend && bun install && cd ../frontend && bun install",
+    "install": " cd apps/backend && bun install && cd ../frontend && bun install",
     "migration": "cd apps/backend && bun run migration.ts",
     "dev:frontend": "cd apps/frontend && bun run dev",
     "dev:backend": "cd apps/backend && bun run --watch main.ts",

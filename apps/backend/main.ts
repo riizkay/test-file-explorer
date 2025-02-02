@@ -41,6 +41,9 @@ async function init_database() {
 }
 
 async function init_routes() {
+  const args = process.argv.slice(2);
+  const port = args[1] || process.env.PORT || 4001;
+
   const app = new Elysia().use(
     cors({
       origin: "*",
@@ -60,7 +63,7 @@ async function init_routes() {
     })
   );
 
-  app.listen(process.env.PORT || 3000);
+  app.listen(port);
   console.log(`🦊 Server is running at ${app.server?.hostname}:${app.server?.port}`);
 }
 

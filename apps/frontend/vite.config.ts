@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import path from "path";
-const CDN_URL = `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/web`;
+const CDN_URL = `https://nos.wjv-1.neo.id/rizkitest1/web`;
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],

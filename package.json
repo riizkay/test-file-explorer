@@ -9,8 +9,7 @@
     "migration": "cd apps/backend && bun run migration.ts",
     "dev:frontend": "cd apps/frontend && bun run dev",
     "dev:backend": "cd apps/backend && bun run --watch main.ts",
-    "prod:frontend": "cd apps/frontend && bun run dev",
-    "prod:backend": "cd apps/backend && bun run main.ts"
+    "prod:backend": "cd apps/backend && bun run main.ts --port"
   },
   "devDependencies": {
     "@types/bun": "latest"

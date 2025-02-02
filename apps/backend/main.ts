@@ -6,6 +6,7 @@ import Global from "./src/global";
 import { cors } from "@elysiajs/cors";
 import { resolve } from "path";
 import { createClient } from "redis";
+import { join, dirname } from "path";
 (await import("dotenv")).config();
 var AppData = Global();
 AppData.DBCon = {};
@@ -54,7 +55,7 @@ async function init_routes() {
     })
   );
 
-  const files = glob.sync("./src/rest/**/*.api.ts");
+  const files = glob.sync(join(__dirname, "src/rest/**/*.api.ts"));
   await Promise.all(
     files.map(async (file) => {
       const api = await import("./" + file);

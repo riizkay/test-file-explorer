@@ -3,6 +3,7 @@ import { glob } from "glob";
 import { Sequelize } from "sequelize";
 import { DatabaseConfig } from "./config";
 import Global from "./src/global";
+import { join } from "path";
 (await import("dotenv")).config();
 var AppData = Global();
 AppData.DBCon = {};
@@ -37,7 +38,7 @@ async function init_database() {
   }
 }
 const migration = async () => {
-  const files = glob.sync("./src/rest/model/**/*.ts");
+  const files = glob.sync(join(__dirname, "./src/rest/model/**/*.ts"));
   await Promise.all(
     files.map(async (file) => {
       if (file.includes("base.ts")) return;

@@ -32,6 +32,8 @@ const openedFolders = ref<string[]>([]);
 const selectedFolders = ref<string[]>([]);
 const treeFS = ref<FileSystemPatched>();
 const currentLS = ref<FileSystemListResponse>();
+const currentLS_Page = ref<number>(1);
+const currentLS_ItemPerPage = ref<number>(1);
 const searchQuery = ref<string>("");
 const fileInputRef = ref(null);
 // Define tree data
@@ -78,10 +80,10 @@ const Load_FS_Main = async (path: string, page: number = 1, limit: number = 100)
   return new Promise<FileSystemPatched>((resolve, reject) => {
     Core.API.post<FileSystemListResponse>("/api/filesystem/list", {
       path: path,
-      page: 1,
+      page: currentLS_Page.value,
       recursive: searchQuery.value.length > 0 ? true : false,
       search: searchQuery.value,
-      limit: 100000,
+      limit: currentLS_ItemPerPage.value,
       type: [FSType.FILE, FSType.FOLDER],
     }).then((res: RestApiResponse<FileSystemListResponse>) => {
       if (res.success) {
@@ -279,6 +281,10 @@ const handleFileSelect = (event: any) => {
     });
     // Handle upload logic here
   }
+};
+const changePage = (page: number) => {
+  currentLS_Page.value = page;
+  refresh();
 };
 </script>
 
@@ -519,6 +525,62 @@ const handleFileSelect = (event: any) => {
             <div class="w-1/5 text-gray-600">
               {{ file.file_size ? (file.file_size / 1024 / 1024).toFixed(2) + " MB" : "-" }}
             </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-6 py-4 bg-white border-t">
+          <div class="flex items-center text-sm text-gray-600 font-medium space-x-4">
+            <span
+              >Showing {{ currentLS?.page || 0 }}-{{ currentLS?.totalPages || 0 }} of
+              {{ currentLS?.totalItems || 0 }} items</span
+            >
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 mr-3">
+              <span>Items per page:</span>
+              <input
+                type="number"
+                v-model="currentLS_ItemPerPage"
+                min="1"
+                max="100"
+                class="w-16 px-2 py-1 ml-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                @change="refresh()"
+              />
+            </div>
+            <button
+              @click="currentLS_Page > 1 && changePage(currentLS_Page - 1)"
+              :disabled="currentLS_Page === 1"
+              class="mr-2 flex items-center px-2 py-2 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              <Icon icon="mdi-chevron-left" class="w-5 h-5 mr-1" />
+            </button>
+
+            <div class="flex items-center space-x-1">
+              <template v-for="page in totalPages" :key="page">
+                <button
+                  @click="changePage(page)"
+                  :class="[
+                    'w-10 h-10 text-sm font-medium rounded-md shadow-sm transition-all duration-200',
+                    currentPage === page
+                      ? 'bg-blue-600 text-white border border-blue-600 hover:bg-blue-700'
+                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50',
+                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                  ]"
+                >
+                  {{ page }}
+                </button>
+              </template>
+            </div>
+
+            <button
+              @click="currentLS_Page < currentLS?.totalPages && changePage(currentLS_Page + 1)"
+              :disabled="currentLS_Page === currentLS?.totalPages"
+              class="flex items-center px-2 py-2 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              <Icon icon="mdi-chevron-right" class="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>

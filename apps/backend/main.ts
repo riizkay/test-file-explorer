@@ -63,7 +63,7 @@ async function init_routes() {
     })
   );
 
-  app.listen(port);
+  app.listen({ port: port, hostname: "0.0.0.0" });
   console.log(`🦊 Server is running at ${app.server?.hostname}:${app.server?.port}`);
 }
 

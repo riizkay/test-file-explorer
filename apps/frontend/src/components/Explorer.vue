@@ -33,7 +33,7 @@ const selectedFolders = ref<string[]>([]);
 const treeFS = ref<FileSystemPatched>();
 const currentLS = ref<FileSystemListResponse>();
 const currentLS_Page = ref<number>(1);
-const currentLS_ItemPerPage = ref<number>(1);
+const currentLS_ItemPerPage = ref<number>(100);
 const searchQuery = ref<string>("");
 const fileInputRef = ref(null);
 // Define tree data

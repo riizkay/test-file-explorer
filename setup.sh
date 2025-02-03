@@ -57,6 +57,7 @@ cat > /etc/apache2/sites-enabled/infokes.riizkay.my.id.conf << EOL
 <VirtualHost *:443>
     ServerName infokes.api.riizkay.my.id
     ServerAlias infokes.api.riizkay.my.id
+    RequestHeader set X-Forwarded-For "%{REMOTE_ADDR}s, %{X-Forwarded-For}e" env=REMOTE_ADDR
     SSLEngine on
     SSLCertificateFile /home/ssl/my/infokes.api.riizkay.my.id/certificate.crt
     SSLCertificateKeyFile /home/ssl/my/infokes.api.riizkay.my.id/private.key

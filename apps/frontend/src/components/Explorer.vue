@@ -532,7 +532,7 @@ const changePage = (page: number) => {
         </div>
 
         <!-- Pagination -->
-        <div class="flex items-center justify-between px-6 py-4 bg-white border-t">
+        <div class="flex items-center justify-between px-6 py-2 bg-white border-t">
           <div class="flex items-center text-sm text-gray-600 font-medium space-x-4">
             <span
               >Showing {{ currentLS?.page || 0 }}-{{ currentLS?.totalPages || 0 }} of
@@ -540,47 +540,43 @@ const changePage = (page: number) => {
             >
           </div>
 
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-2 h-10">
             <div class="flex items-center space-x-2 mr-3">
-              <span>Items per page:</span>
+              <span class="text-gray-600 text-sm">Items per page:</span>
               <input
                 type="number"
                 v-model="currentLS_ItemPerPage"
                 min="1"
                 max="100"
-                class="w-16 px-2 py-1 ml-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-16 h-8 px-2 py-1 ml-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 @change="refresh()"
               />
             </div>
             <button
               @click="currentLS_Page > 1 && changePage(currentLS_Page - 1)"
               :disabled="currentLS_Page === 1"
-              class="mr-2 flex items-center px-2 py-2 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              class="h-8 mr-2 flex items-center px-2 py-1.5 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               <Icon icon="mdi-chevron-left" class="w-5 h-5 mr-1" />
             </button>
 
             <div class="flex items-center space-x-1">
-              <template v-for="page in currentLS?.totalPages" :key="page">
-                <button
-                  @click="changePage(page)"
-                  :class="[
-                    'w-10 h-10 text-sm font-medium rounded-md shadow-sm transition-all duration-200',
-                    currentLS_Page === page
-                      ? 'bg-blue-600 text-white border border-blue-600 hover:bg-blue-700'
-                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50',
-                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                  ]"
-                >
-                  {{ page }}
-                </button>
-              </template>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="number"
+                  v-model="currentLS_Page"
+                  :min="1"
+                  :max="currentLS?.totalPages"
+                  class="w-16 h-8 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                  @change="changePage(currentLS_Page)"
+                />
+              </div>
             </div>
 
             <button
               @click="currentLS_Page < currentLS?.totalPages! && changePage(currentLS_Page + 1)"
               :disabled="currentLS_Page === currentLS?.totalPages"
-              class="flex items-center px-2 py-2 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              class="h-8 flex items-center px-2 py-1.5 ml-2 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               <Icon icon="mdi-chevron-right" class="w-5 h-5" />
             </button>
@@ -618,31 +614,13 @@ const changePage = (page: number) => {
 </style>
 <script lang="ts">
 export default defineComponent({
-  name: "Window",
+  name: "File Explorer",
   components: {
     Icon,
     Tree,
   },
-  emits: ["close"],
   data() {
-    return {
-      selectedFile: null,
-      isDragging: false,
-      isResizing: false,
-      resizeDirection: "",
-      position: {
-        x: 100,
-        y: 100,
-      },
-      startPosition: {
-        x: 0,
-        y: 0,
-      },
-      width: 600,
-      height: 400,
-      minWidth: 400,
-      minHeight: 300,
-    };
+    return {};
   },
   methods: {},
   beforeUnmount() {},

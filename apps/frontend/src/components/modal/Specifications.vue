@@ -212,8 +212,29 @@ defineProps<{ show: boolean; onClose: () => void }>();
                     ></path>
                   </svg>
                 </div>
+                <span class="text-slate-700">Table Indexing</span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <div
+                  class="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center"
+                >
+                  <svg
+                    class="w-3 h-3 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                </div>
                 <span class="text-slate-700">Redis Caching System</span>
               </div>
+
               <div class="flex items-center space-x-3">
                 <div
                   class="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center"
